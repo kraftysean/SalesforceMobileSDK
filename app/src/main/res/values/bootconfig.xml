@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="remoteAccessConsumerKey">3MVG9KI2HHAq33Rw9AT8PFmsD17fKnplg748XF.SKrB_oaYXdUagUS1ugvihHSUxTxkxEesn8mf3oyoM6mOdK</string>
+    <string name="oauthRedirectURI">toddemoapp://auth/success</string>
+    <string-array name="oauthScopes">
+        <item>api</item>
+    </string-array>
+    <string name="androidPushNotificationClientId">1057121791036</string>
+</resources>
