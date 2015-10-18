@@ -46,6 +46,6 @@ public class TransactionOnDemandApp extends Application {
 		 * Add your Google package ID in 'bootconfig.xml', as the value
 		 * for the key 'androidPushNotificationClientId'.
 		 */
-//		 SalesforceSDKManager.getInstance().setPushNotificationReceiver(pnInterface);
+		SalesforceSDKManager.getInstance().setPushNotificationReceiver(new PushNotificationHandler(this));
 	}
 }
