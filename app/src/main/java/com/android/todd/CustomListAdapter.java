@@ -29,6 +29,7 @@ import java.util.Calendar;
 import java.util.List;
 
 public class CustomListAdapter extends ArrayAdapter<FeedItem> {
+    private static LayoutInflater inflater = null;
     private final Context context;
     private final List<FeedItem> newsFeed;
 
@@ -37,12 +38,14 @@ public class CustomListAdapter extends ArrayAdapter<FeedItem> {
         super(context, -1, items);
         this.context = context;
         this.newsFeed = items;
+        inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View rowView = inflater.inflate(R.layout.chatter_list_item, parent, false);
+        View rowView = convertView;
+        if (convertView == null)
+            rowView = inflater.inflate(R.layout.chatter_list_item, parent, false);
         TextView tvName = (TextView) rowView.findViewById(R.id.tvLine1);
         TextView tvMessage = (TextView) rowView.findViewById(R.id.tvLine2);
         TextView tvTime = (TextView) rowView.findViewById(R.id.tvTime);
@@ -54,7 +57,6 @@ public class CustomListAdapter extends ArrayAdapter<FeedItem> {
         new ImageDownloader(ivIcon).execute(feedItem.getImage());
         Log.d("PHOTO_URL", feedItem.getImage());
 
-
         return rowView;
     }
 
@@ -64,7 +66,7 @@ public class CustomListAdapter extends ArrayAdapter<FeedItem> {
         return pTime.format(calendar);
     }
 
-    class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
+    private class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
         ImageView bmImage;
 
         public ImageDownloader(ImageView bmImage) {

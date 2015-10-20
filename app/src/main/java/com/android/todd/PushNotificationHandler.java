@@ -37,7 +37,7 @@ public class PushNotificationHandler implements PushNotificationInterface {
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.chatter_icon)
-                .setContentTitle("GCM Message")
+                .setContentTitle("New message")
                 .setContentText(message)
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)

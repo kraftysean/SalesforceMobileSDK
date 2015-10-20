@@ -52,18 +52,24 @@ public class MainActivity extends SalesforceActivity {
 
     private RestClient client;
     private CustomListAdapter listAdapter;
+    private ListView listView;
     private ProgressDialog pDialog;
 
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState);
 
-		// Setup view
-		setContentView(R.layout.main);
+        // Setup view
+        setContentView(R.layout.main);
+
+        // TODO: Add the SwipeRefresh function to the listView.
+//        SwipeRefreshLayout refreshLayout = (SwipeRefreshLayout) findViewById(R.id.activity_main_swipe_refresh_layout);
 
         // Create list adapter
         listAdapter = new CustomListAdapter(this, new ArrayList<FeedItem>());
-        ((ListView) findViewById(R.id.contacts_list)).setAdapter(listAdapter);
+        listView = ((ListView) findViewById(android.R.id.list));
+        listView.setAdapter(listAdapter);
+
     }
 	
 	@Override 
@@ -108,6 +114,7 @@ public class MainActivity extends SalesforceActivity {
                 Log.d("CHATTER_API_RESPONSE:", result.toString());
                 try {
                     listAdapter.clear();
+
                     JSONArray elements = result.asJSONObject().getJSONArray("elements");
                     for (int i = 0; i < elements.length(); i++) {
                         if (elements.getJSONObject(i).getString("feedElementType").equals("FeedItem")) {
@@ -122,6 +129,8 @@ public class MainActivity extends SalesforceActivity {
                             listAdapter.add(fItem);
                         }
                     }
+                    if (listAdapter.getCount() == 0)
+                        listView.setEmptyView(findViewById(android.R.id.empty));
                 } catch (Exception e) {
                     onError(e);
                 }
