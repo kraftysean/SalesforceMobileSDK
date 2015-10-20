@@ -26,14 +26,10 @@
  */
 package com.android.todd;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-
-import org.json.JSONArray;
-
+import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -44,31 +40,37 @@ import com.salesforce.androidsdk.rest.RestRequest;
 import com.salesforce.androidsdk.rest.RestResponse;
 import com.salesforce.androidsdk.ui.sfnative.SalesforceActivity;
 
+import org.json.JSONArray;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+
 /**
  * Main activity
  */
 public class MainActivity extends SalesforceActivity {
 
     private RestClient client;
-    private ArrayAdapter<String> listAdapter;
-	
-	@Override
+    private CustomListAdapter listAdapter;
+    private ProgressDialog pDialog;
+
+    @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		// Setup view
 		setContentView(R.layout.main);
-	}
+
+        // Create list adapter
+        listAdapter = new CustomListAdapter(this, new ArrayList<FeedItem>());
+        ((ListView) findViewById(R.id.contacts_list)).setAdapter(listAdapter);
+    }
 	
 	@Override 
 	public void onResume() {
 		// Hide everything until we are logged in
 		findViewById(R.id.root).setVisibility(View.INVISIBLE);
 
-		// Create list adapter
-		listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, new ArrayList<String>());
-		((ListView) findViewById(R.id.contacts_list)).setAdapter(listAdapter);				
-		
 		super.onResume();
 	}		
 	
@@ -78,70 +80,59 @@ public class MainActivity extends SalesforceActivity {
         this.client = client; 
 
 		// Show everything
-		findViewById(R.id.root).setVisibility(View.VISIBLE);
+        View v = findViewById(R.id.root);
+        v.setVisibility(View.VISIBLE);
+
+        try {
+            sendNewsFeedRequest(v);
+        } catch (UnsupportedEncodingException e) {
+            Log.d("NEWS_FEED_EXCEPTION:", e.toString());
+        }
+
 	}
 
-	/**
-	 * Called when "Logout" button is clicked. 
-	 * 
-	 * @param v
-	 */
+    public void sendNewsFeedRequest(View v) throws UnsupportedEncodingException {
+        sendChatterRequest("chatter/feeds/news/me/feed-elements");
+    }
+
 	public void onLogoutClick(View v) {
 		SalesforceSDKManager.getInstance().logout(this);
 	}
-	
-	/**
-	 * Called when "Clear" button is clicked. 
-	 * 
-	 * @param v
-	 */
-	public void onClearClick(View v) {
-		listAdapter.clear();
-	}	
 
-	/**
-	 * Called when "Fetch Contacts" button is clicked
-	 * 
-	 * @param v
-	 * @throws UnsupportedEncodingException 
-	 */
-	public void onFetchContactsClick(View v) throws UnsupportedEncodingException {
-        sendRequest("SELECT Name FROM Contact");
-	}
+    private void sendChatterRequest(String uri) throws UnsupportedEncodingException {
+        RestRequest restRequest = RestRequest.getRequestForChatterRetrieve(getString(R.string.api_version), uri);
 
-	/**
-	 * Called when "Fetch Accounts" button is clicked
-	 * 
-	 * @param v
-	 * @throws UnsupportedEncodingException 
-	 */
-	public void onFetchAccountsClick(View v) throws UnsupportedEncodingException {
-		sendRequest("SELECT Name FROM Account");
-	}	
-	
-	private void sendRequest(String soql) throws UnsupportedEncodingException {
-		RestRequest restRequest = RestRequest.getRequestForQuery(getString(R.string.api_version), soql);
+        client.sendAsync(restRequest, new AsyncRequestCallback() {
+            @Override
+            public void onSuccess(RestRequest request, RestResponse result) {
+                Log.d("CHATTER_API_RESPONSE:", result.toString());
+                try {
+                    listAdapter.clear();
+                    JSONArray elements = result.asJSONObject().getJSONArray("elements");
+                    for (int i = 0; i < elements.length(); i++) {
+                        if (elements.getJSONObject(i).getString("feedElementType").equals("FeedItem")) {
+                            String displayName = elements.getJSONObject(i).getJSONObject("actor").getString("displayName");
+                            String message = elements.getJSONObject(i).getJSONObject("body").getString("text");
+                            String photoUrl = elements.getJSONObject(i).getJSONObject("actor").getJSONObject("photo").getString("fullEmailPhotoUrl");
 
-		client.sendAsync(restRequest, new AsyncRequestCallback() {
-			@Override
-			public void onSuccess(RestRequest request, RestResponse result) {
-				try {
-					listAdapter.clear();
-					JSONArray records = result.asJSONObject().getJSONArray("records");
-					for (int i = 0; i < records.length(); i++) {
-						listAdapter.add(records.getJSONObject(i).getString("Name"));
-					}					
-				} catch (Exception e) {
-					onError(e);
-				}
-			}
-			
-			@Override
-			public void onError(Exception exception) {
+                            String createdDate = elements.getJSONObject(i).getString("createdDate");
+
+                            FeedItem fItem = new FeedItem(displayName, message, photoUrl, createdDate);
+
+                            listAdapter.add(fItem);
+                        }
+                    }
+                } catch (Exception e) {
+                    onError(e);
+                }
+            }
+
+            @Override
+            public void onError(Exception exception) {
                 Toast.makeText(MainActivity.this,
-                               MainActivity.this.getString(SalesforceSDKManager.getInstance().getSalesforceR().stringGenericError(), exception.toString()),
-                               Toast.LENGTH_LONG).show();
-			}
-		});
-	}
+                        MainActivity.this.getString(SalesforceSDKManager.getInstance().getSalesforceR().stringGenericError(), exception.toString()),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
 }

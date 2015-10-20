@@ -24,11 +24,11 @@ public class PushNotificationHandler implements PushNotificationInterface {
     public void onPushMessageReceived(Bundle message) {
         Log.d("PUSH_NOTIFICATION_MSG:", message.toString());
 
-        sendNotification(message.getString("message"));
+        receivePushNotification(message.getString("message"));
 
     }
 
-    private void sendNotification(String message) {
+    private void receivePushNotification(String message) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0 /* Request code */, intent,
@@ -36,7 +36,7 @@ public class PushNotificationHandler implements PushNotificationInterface {
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
-                .setSmallIcon(R.drawable.sf__icon)
+                .setSmallIcon(R.drawable.chatter_icon)
                 .setContentTitle("GCM Message")
                 .setContentText(message)
                 .setAutoCancel(true)
